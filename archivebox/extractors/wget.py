@@ -51,7 +51,10 @@ def save_wget(link: Link, out_dir: Optional[Path]=None, timeout: int=TIMEOUT) ->
     if SAVE_WARC:
         warc_dir = out_dir / "warc"
         warc_dir.mkdir(exist_ok=True)
-        warc_path = warc_dir / str(int(datetime.now(timezone.utc).timestamp()))
+
+        tmp_dir = Path(__file__).parent.resolve() / "tmp"
+        now = str(int(datetime.now(timezone.utc).timestamp()))
+        warc_path = tmp_dir / now
 
     # WGET CLI Docs: https://www.gnu.org/software/wget/manual/wget.html
     output: ArchiveOutput = None
@@ -109,6 +112,10 @@ def save_wget(link: Link, out_dir: Optional[Path]=None, timeout: int=TIMEOUT) ->
         else:
             print(f'          {out_dir}/{output}')
             raise ArchiveError('Failed to find wget output after running', hints)
+        
+        if SAVE_WARC:
+            warc = tmp_dir / f"{now}.warc.gz"
+            warc.rename(warc_dir / f"{now}.warc.gz")
     except Exception as err:
         status = 'failed'
         output = err
