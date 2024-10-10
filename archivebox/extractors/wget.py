@@ -55,7 +55,11 @@ def save_wget(link: Link, out_dir: Optional[Path]=None, timeout: int=WGET_CONFIG
     if WGET_CONFIG.SAVE_WARC:
         warc_dir = out_dir / "warc"
         warc_dir.mkdir(exist_ok=True)
-        warc_path = warc_dir / str(int(datetime.now(timezone.utc).timestamp()))
+        tmp_dir = Path(__file__).parent.resolve() / 'tmp'
+        tmp_dir.mkdir(exist_ok=True)
+
+        now = str(int(datetime.now(timezone.utc).timestamp()))
+        warc_path = warc_dir / now
 
     wget_binary = WGET_BINARY.load()
     assert wget_binary.abspath and wget_binary.version
@@ -121,6 +125,10 @@ def save_wget(link: Link, out_dir: Optional[Path]=None, timeout: int=WGET_CONFIG
         else:
             print(f'          {out_dir}/{output}')
             raise ArchiveError('Failed to find wget output after running', hints)
+        
+        if WGET_CONFIG.SAVE_WARC:
+            warc = tmp_dir / (now+'.warc.gz')
+            warc.rename(warc_dir / (now+'.warc.gz'))
     except Exception as err:
         status = 'failed'
         output = err
